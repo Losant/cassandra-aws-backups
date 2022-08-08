@@ -36,7 +36,7 @@ Description:
   into multiple smaller files. If incremental backups are enabled in
   Cassandra, this script can incrementally copy them as they are created, saving
   time and space. Additionally, this script can be used to cleanup old SnapShot
-  and Incremental files locally. 
+  and Incremental files locally.
 
   The restore command is designed to perform a simple restore of a full snapshot.
   In the event that you want to restore incremental backups you should start by
@@ -79,9 +79,9 @@ Flags:
     Print this help message.
 
   -H, --home-dir
-    This is the $CASSANDRA_HOME directory and is only used if the data_directories, 
+    This is the $CASSANDRA_HOME directory and is only used if the data_directories,
     commitlog_directory, or the saved_caches_directory values cannot be parsed out of the
-    yaml file. 
+    yaml file.
 
   -i, --incremental
     Copy the incremental backup files and do not take a snapshot. Can only
@@ -92,7 +92,7 @@ Flags:
     This option will use additional local disk space set the --target-gz-dir
     to use an alternate disk location if free space is an issue
 
-  -k, --keep-old  
+  -k, --keep-old
     Set this flag on restore to keep a local copy of the old data files
     Set this flag on backup to keep a local copy of the compressed backup, schema dump,
     and token ring
@@ -103,7 +103,7 @@ Flags:
     Default path is /var/log/cassandra
 
   -L, --inc-commit-logs
-    Add commit logs to the backup archive. WARNING: This option can cause the script to 
+    Add commit logs to the backup archive. WARNING: This option can cause the script to
     fail an active server as the files roll over
 
   -n, --noop
@@ -274,18 +274,18 @@ function validate() {
       eval "parse_yaml_${ACTION}"
     fi
 
-    if [ -z ${data_file_directories} ]; then 
+    if [ -z ${data_file_directories} ]; then
       if [ -z ${CASS_HOME} ]; then
         logerror "Cannot parse data_directories from ${YAML_FILE} and --home-dir argument" \
         " is missing, which should be the \$CASSANDRA_HOME path"
       else
         data_file_directories="${CASS_HOME}/data/data"
       fi
-    fi 
+    fi
     if ${INCLUDE_COMMIT_LOGS}; then
       loginfo "WARNING: Backing up Commit Logs can cause script to fail if server is under load"
     fi
-    if [ -z ${commitlog_directory} ]; then 
+    if [ -z ${commitlog_directory} ]; then
       if [ -z ${CASS_HOME} ]; then
         logerror "Cannot parse commitlog_directory from ${YAML_FILE} and --home-dir argument" \
         " is missing, which should be the \$CASSANDRA_HOME path"
@@ -299,14 +299,14 @@ function validate() {
     if ${INCLUDE_CACHES}; then
       loginfo "Backing up saved caches can waste space and time, but it is happening anyway"
     fi
-    if [ -z ${saved_caches_directory} ]; then 
+    if [ -z ${saved_caches_directory} ]; then
       if [ -z ${CASS_HOME} ]; then
         logerror "Cannot parse saved_caches_directory from ${YAML_FILE} and --home-dir argument" \
         " is missing, which should be the \$CASSANDRA_HOME path"
       else
         saved_caches_directory="${CASS_HOME}/data/saved_caches"
       fi
-    fi 
+    fi
     if [ ! -d ${saved_caches_directory} ]; then
       logerror "saved_caches_directory does not exist: ${saved_caches_directory} "
     fi
@@ -337,7 +337,7 @@ function validate() {
         DOWNLOAD_ONLY=true
         INCREMENTAL=true
         SUFFIX="incr"
-      else 
+      else
         if grep -q 'snpsht' <<< "${AWS_LS}"; then
           loginfo "Detected full snapshot backup requested for restore."
         else
@@ -362,7 +362,7 @@ function validate() {
         COMPRESSION=false
         TAR_EXT="tar"
         TAR_CFLAG=""
-      fi     
+      fi
       RESTORE_FILE=$(awk -F"/" '{print $NF}' <<< "${AWS_LS}")
       if [[ "${RESTORE_FILE}" != *.${TAR_EXT} ]] ; then
           #Detect Split Files${TAR_EXT}-
@@ -383,7 +383,7 @@ function validate() {
           loginfo "Fixed up restore bucket path: ${AWS_BUCKET}"
         fi
       fi
-      
+
       if grep -q "," <<< "${seed_provider_class_name_parameters_seeds}"; then
         loginfo "Restore target node is likely part of a cluster. Restore script" \
         " will not start node automatically"
@@ -419,7 +419,7 @@ function validate() {
             loginfo "Creating token ring dump directory: ${TOKEN_RING_DIR}"
             mkdir -p "${TOKEN_RING_DIR}"
           fi
-      fi 
+      fi
     fi
   fi
 
@@ -565,7 +565,7 @@ function parse_yaml_restore() {
           'incremental_backups' \
           'seed_provider_class_name_parameters_seeds')
 
-  parse_yaml ${YAML_FILE}  
+  parse_yaml ${YAML_FILE}
 }
 
 function parse_yaml_inventory() {
@@ -621,7 +621,7 @@ function parse_yaml() {
             }
           }
         }
-      }' 
+      }'
     )
 }
 
@@ -629,7 +629,7 @@ function parse_yaml() {
 function set_auth_string() {
   if ${USE_AUTH}; then
     if [ -n "${USER_FILE}" ] && [ -f "${USER_FILE}" ]; then
-      source "${USER_FILE}" 
+      source "${USER_FILE}"
     fi
     if [ -z "${CASSANDRA_USER}" ] || [ -z "${CASSANDRA_PASS}" ]; then
       logerror "Cassandra authentication values are missing or empty CASSANDRA_USER or CASSANDRA_PASS"
@@ -695,7 +695,7 @@ function export_token_ring() {
 # Copy the commit logs, saved caches directoy and the yaml config file
 function copy_other_files() {
   loginfo "Copying caches, commitlogs and config file paths to backup list"
-  #resolves issue #2 
+  #resolves issue #2
   if ${INCLUDE_COMMIT_LOGS}; then
     find "${commitlog_directory}" -type f >> "${TARGET_LIST_FILE}"
   fi
@@ -958,7 +958,7 @@ function restore_files() {
     do
        loginfo "Renaming ${i} to ${i}_old_${DATE} if anything fails, manually rename it"
        mv "${i}" "${i}_old_${DATE}"
-    done 
+    done
 
     loginfo "Renaming ${commitlog_directory} to ${commitlog_directory}_old_${DATE} "\
       "if anything fails, manually rename it"
@@ -967,7 +967,7 @@ function restore_files() {
     loginfo "Renaming ${saved_caches_directory} to ${saved_caches_directory}_old_${DATE}"\
       " if anything fails, manually rename it"
     mv "${saved_caches_directory}" "${saved_caches_directory}_old_${DATE}"
-    
+
     #copy the full paths back to the root directory exlude the Yaml File
     mkdir -p "${commitlog_directory}"
     restore_fix_perms "${commitlog_directory}"
@@ -980,7 +980,7 @@ function restore_files() {
     if [ -d "${BACKUP_DIR}/restore${saved_caches_directory}" ]; then
       rsync -aH ${VERBOSE_RSYNC} ${BACKUP_DIR}/restore${saved_caches_directory}/* ${saved_caches_directory}/
     fi
-    
+
     for i in "${data_file_directories[@]}"
     do
       #have to recreate it since we moved the old one for safety
@@ -988,12 +988,12 @@ function restore_files() {
       loginfo "Performing rsync data files from restore directory to full path ${i}"
       rsync -aH ${VERBOSE_RSYNC}  ${BACKUP_DIR}/restore${i}/*  ${i}/
       loginfo "Moving snapshot files up two directories to their keyspace base directories"
-      #assume the snap* pattern is safe since no other 
+      #assume the snap* pattern is safe since no other
       # snapshots should have been copied in the backup process
       find ${i} -mindepth 2 -path '*/snapshots/snap*/*' -type f \
         -exec bash -c 'dir={}&& cd ${dir%/*} && mv {} ../..' \;
       restore_fix_perms ${i}
-    done 
+    done
   fi
 }
 
@@ -1160,10 +1160,10 @@ do
       d)
           BACKUP_DIR=${OPTARG}
           ;;
-      D)  
+      D)
           DOWNLOAD_ONLY=true
           ;;
-      f)  
+      f)
           FORCE_RESTORE=true
           ;;
       h)
@@ -1192,7 +1192,7 @@ do
           LOG_OUTPUT=true
           [ -d ${OPTARG} ] && LOG_DIR=${OPTARG%/}
           ;;
-      L)  
+      L)
           INCLUDE_COMMIT_LOGS=true
 	        ;;
       n)
@@ -1275,7 +1275,7 @@ LOG_FILE="${LOG_DIR}/CassandraBackup${DATE}.log" #script log file
 LOG_OUTPUT=${LOG_OUTPUT:-false} #flag to output to log file instead of stdout
 NICE="$(which nice)" #which nice for low impact tar
 NICE_LEVEL=${NICE_LEVEL:-10} ##10 is default nice level
-NODETOOL="$(which nodetool)" #which nodetool
+NODETOOL="$(which nodetool) -Dcom.sun.jndi.rmiURLParsing=legacy" #which nodetool
 USER_OPTIONS="" #nodetool and cqlsh options
 SCHEMA_DIR="${BACKUP_DIR}/schema" # schema backups directory
 TOKEN_RING_DIR="${BACKUP_DIR}/token_ring" # token ring backups directory
